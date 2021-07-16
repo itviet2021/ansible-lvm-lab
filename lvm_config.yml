@@ -1,0 +1,57 @@
+---
+- name: Ansible LVM từ A tới Á
+  # hoặc hosts: 127.0.0.1
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+
+    - name: Tạo vách ngăn (partition) từ parted
+      parted:
+        device: /dev/nvme0n2
+        label: gpt
+        number: 1
+        flags: [ lvm ]
+        state: present
+
+    - name: Tạo volume group vg02 từ physical volume
+      lvg:
+        vg: vg02
+        pvs: /dev/nvme0n2p1
+
+    - name: Tạo logical volume lv01 từ volume group vg02
+      lvol:
+        vg: vg02
+        lv:  lv01
+        size: 1g
+
+    - name: Tạo logical volume lv02 từ volume group vg02
+      lvol:
+        vg: vg02
+        lv:  lv02
+        size: 1g
+
+    - name: Định dạng (format) filsystem kiểu ext4 cho lv01
+      filesystem:
+        fstype: ext4
+        dev: /dev/vg02/lv01
+
+    - name: Định dạng filsystem kiểu xfs cho lv02
+      filesystem:
+        fstype: xfs
+        dev: /dev/vg02/lv02
+
+    - name: Gắn (mount) ext4 vào /data/etx4
+      mount:
+        path: /data/etx4
+        src: /dev/vg02/lv01
+        fstype: ext4
+        state: mounted
+
+    - name: Gắn xfs vào /data/xfs
+      mount:
+        path: /data/xfs
+        src: /dev/vg02/lv02
+        fstype: xfs
+        state: mounted

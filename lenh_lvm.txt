@@ -1,0 +1,81 @@
+
+LVM manual
+
+---------------------------------------------------------------------------------
+
+-- 0. Cài parted nếu chưa có
+
+# yum install parted -y
+
+-- Thêm ổ cứng mới 5 GB --> kiểu NVMe --> để tên giống như dưới
+-- 1. Xác định tên đĩa số 2 mới thêm vào
+
+# parted -l
+
+---------------------------------------------------------------------------------
+
+-- 2. parted chia đĩa số 2 thành partiton kiểu lvm + xem lại
+
+# parted -s /dev/nvme0n2 "mklabel gpt" && \
+parted -s /dev/nvme0n2 "mkpart 'Linux LVM' 0% 100%" && \
+parted -s /dev/nvme0n2 "set 1 lvm on" && \
+parted /dev/nvme0n2 print
+
+---------------------------------------------------------------------------------
+
+-- 3. Tạo lvm
+
+# pvcreate /dev/nvme0n2p1 && \
+vgcreate vg02 /dev/nvme0n2p1 && \
+lvcreate -n lv01 -L 1G vg02 &&\
+lvcreate -n lv02 -L 1G vg02
+
+-- xem lại
+
+# pvdisplay /dev/nvme0n2p1 && \
+vgdisplay vg02 && \
+lvdisplay vg02/lv0{1,2}
+
+---------------------------------------------------------------------------------
+
+-- 4. Tạo filesystem
+
+# mkfs.ext4 /dev/vg02/lv01 && \
+mkfs.xfs /dev/vg02/lv02
+
+---------------------------------------------------------------------------------
+
+-- 5. mount filesystem + xem lại
+
+# mkdir -p /data/{ext4,xfs} && \
+mount /dev/vg02/lv01 /data/ext4 && \
+mount /dev/vg02/lv02 /data/xfs && \
+df -Th | grep data
+
+-- thêm vào /etc/fstab để tự động gắn khi khởi động OS
+
+# echo "/dev/vg02/lv01 /data/etx4 ext4 defaults 0 0" >> /etc/fstab && \
+echo "/dev/vg02/lv02 /data/xfs xfs defaults 0 0" >> /etc/fstab && \
+grep data /etc/fstab
+
+---------------------------------------------------------------------------------
+
+-- 6. Tăng lv + filesystem
+
+# lvextend --resizefs -L +2G /dev/vg02/lv01 && \
+lvextend --resizefs -l +100%FREE /dev/vg02/lv02 && \
+df -Th | grep data
+
+---------------------------------------------------------------------------------
+
+-- 7. Giảm lv + filesystem
+--> có -y tự umount và mount lại
+
+# lvreduce -y --resizefs -L -1G vg02/lv01 && \
+df -Th | grep data
+
+---------------------------------------------------------------------------------
+
+-- hết
+
+---------------------------------------------------------------------------------

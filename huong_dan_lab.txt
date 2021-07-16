@@ -1,0 +1,5 @@
+
+# yum install epel-release -y && \
+yum install ansible git -y && \
+git clone https://github.com/itviet2021/ansible-lvm-lab.git && \
+cd ansible-lvm-lab

@@ -1,0 +1,30 @@
+# phải cài
+# ansible-galaxy collection install community.general
+#
+# và khai báo community.general.lvol như bên dưới
+#
+# --> k có ansible sẽ k hiểu + - trong size:
+
+---
+- name: Ansible LVM tăng logical volume + filesystem
+  # hoặc hosts: 127.0.0.1
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+
+    - name: Tăng 2GB cho lv01 ext4
+      community.general.lvol:
+      #lvol --> k hiểu + - trong size:
+        vg: vg02
+        lv: lv01
+        size: +2g
+        resizefs: true
+
+    - name: Tăng hết cỡ (size) cho lv02 xfs
+      community.general.lvol:
+        vg: vg02
+        lv: lv02
+        size: +100%FREE
+        resizefs: true

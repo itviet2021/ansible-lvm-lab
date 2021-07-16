@@ -1,0 +1,28 @@
+---
+- name: Ansible LVM giảm logical volume + filesystem
+  # hoặc hosts: 127.0.0.1
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+
+    - name: Hổng gắn (umount) lv01 ext4 nữa
+      mount:
+        path: /data/etx4
+        state: unmounted
+
+    - name: Giảm 1GB cho lv01 ext4
+      community.general.lvol:
+        vg: vg02
+        lv: lv01
+        size: -1g
+        resizefs: true
+        force: yes
+
+    - name: Gắn lại lv01 ext4
+      mount:
+        src: /dev/vg02/lv01
+        path: /data/etx4
+        fstype: ext4
+        state: mounted

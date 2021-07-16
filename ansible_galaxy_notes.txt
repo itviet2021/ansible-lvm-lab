@@ -1,0 +1,12 @@
+
+-- Nếu chạy lệnh này bị lỗi do không download community-general về được
+
+# ansible-galaxy collection install community.general
+
+thì làm như sau:
+
+# curl -LO https://github.com/itviet2021/ansible-lvm-slide/raw/main/communitygeneral-3.3.2.tar.gz && \
+mkdir -p /root/.ansible/collections/ansible_collections/community/general && \
+tar xf community-general-3.3.2.tar.gz -C 
+/root/.ansible/collections/ansible_collections/community/general
+

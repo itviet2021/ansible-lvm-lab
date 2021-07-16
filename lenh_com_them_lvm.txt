@@ -1,0 +1,58 @@
+
+Cơm thêm LVM
+
+-------------------------------------------------------------------
+
+-- Thêm 3 ổ cứng 2, 3, 4 GB --> kiểu NVMe --> để tên giống như dưới
+--> tui xài vmware workstation chọn ổ cứng kiểu nvme nên các ổ thứ 3, 4, 5 tên là
+/dev/nvme0n3
+/dev/nvme0n4
+/dev/nvme0n5
+
+-- 1. Chuẩn bị
+
+-- chia đĩa số 4
+# parted -s /dev/nvme0n4 "mklabel gpt" && \
+parted -s /dev/nvme0n4 "mkpart primary 0% 20%" && \
+parted -s /dev/nvme0n4 "set 1 lvm on" && \
+parted -s /dev/nvme0n4 "mkpart primary 20% 100%" && \
+parted -s /dev/nvme0n4 "set 2 lvm on"
+
+-- chia đĩa số 5
+# parted -s /dev/nvme0n5 "mklabel gpt" && \
+parted -s /dev/nvme0n5 "mkpart primary 0% 30%" && \
+parted -s /dev/nvme0n5 "set 1 lvm on" && \
+parted -s /dev/nvme0n5 "mkpart primary 30% 50%" && \
+parted -s /dev/nvme0n5 "set 2 lvm on" && \
+parted -s /dev/nvme0n5 "mkpart primary 50% 100%" && \
+parted -s /dev/nvme0n5 "set 3 lvm on"
+
+-------------------------------------------------------------------
+
+-- 2. Tạo PV từ toàn bộ đĩa số 3 --> k cần chia partition
+
+# pvcreate /dev/nvme0n3 && pvdisplay /dev/nvme0n3
+
+-------------------------------------------------------------------
+
+-- 3. Tạo vg03 từ nhiều đĩa --> toàn bộ đĩa số 2 + 1 partition đĩa số 4 + 1 partition đĩa số 5
+
+# vgcreate vg03 /dev/nvme0n3 /dev/nvme0n4p2 /dev/nvme0n5p3 && vgdisplay vg03
+
+-------------------------------------------------------------------
+
+-- 4. Mở rộng vg03 từ partition 2 đĩa số 5
+
+# vgextend vg03 /dev/nvme0n5p2 && vgdisplay vg03
+
+-------------------------------------------------------------------
+
+-- 5. Tạo vg04 với PE (Physical Extent) = 8MB, mặc định 4 MB
+
+# vgcreate vg04 -s 8 /dev/nvme0n5p1 && vgdisplay vg04
+
+-------------------------------------------------------------------
+
+-- hết
+
+-------------------------------------------------------------------

@@ -1,0 +1,52 @@
+---
+- name: Chạy lệnh như trên shell
+  # hoặc hosts: 127.0.0.1
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+# Để output lệnh có format giống thực hiện trên môi trường shell thì
+# /etc/ansible/ansible.cfg
+# [defaults]
+# stdout_callback = yaml
+#
+# plugin callback
+# https://docs.ansible.com/ansible/latest/plugins/callback.html
+
+  tasks:
+
+    - name: Xem đĩa
+      command: parted /dev/nvme0n2 print
+      register: xem_parted
+
+    - debug: msg="{{ xem_parted.stdout }}"
+
+    - name: Xem PV
+      command: pvdisplay /dev/nvme0n2p1
+      register: xem_pv
+
+    - debug: msg="{{ xem_pv.stdout }}"
+
+    - name: Xem VG
+      command: vgdisplay vg02
+      register: xem_vg
+
+    - debug: msg="{{ xem_vg.stdout }}"
+
+    - name: Xem LV
+      shell: lvdisplay vg02/lv0{1,2}
+      register: xem_lv
+
+    - debug: msg="{{ xem_lv.stdout }}"
+
+    - name: Xem điểm gắn (mount point)
+      shell: df -Th | grep data
+      register: xem_mount
+
+    - debug: msg="{{ xem_mount.stdout }}"
+
+    - name: Xem trong /etc/fstab
+      command: grep data /etc/fstab
+      register: xem_fstab
+
+    - debug: msg="{{ xem_fstab.stdout }}"

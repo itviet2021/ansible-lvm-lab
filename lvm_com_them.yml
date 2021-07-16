@@ -1,0 +1,50 @@
+---
+
+- name: Cơm thêm LVM
+  # hoặc hosts: 127.0.0.1
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+
+    # vgcreate vg03 /dev/nvme0n3 /dev/nvme0n4p2 /dev/nvme0n5p3
+    - name: Tạo volume group từ toàn bộ đĩa và 2 partition
+      lvg:
+        vg: vg03
+        pvs: /dev/nvme0n3,/dev/nvme0n4p2,/dev/nvme0n5p3
+
+    - name: Xem pv /dev/nvme0n3 tự tạo ra khi chạy task trên
+      command: pvdisplay /dev/nvme0n3
+      register: xem_pv
+
+    - debug: msg="{{ xem_pv.stdout }}"
+
+    - name: Xem vg03
+      command: vgdisplay vg03
+      register: xem_vg03_1
+
+    - debug: msg="{{ xem_vg03_1.stdout }}"
+
+    - name: Tăng dung lượng vg03
+      lvg:
+        vg: vg03
+        pvs: /dev/nvme0n5p2
+
+    - name: Xem vg03 tăng dung lượng
+      command: vgdisplay vg03
+      register: xem_vg03_2
+
+    - debug: msg="{{ xem_vg03_2.stdout }}"
+
+    - name: Tạo vg04 có PE 8MB
+      lvg:
+        vg: vg04
+        pvs: /dev/nvme0n5p1
+        pesize: '8'
+
+    - name: Xem vg04
+      command: vgdisplay vg04
+      register: xem_vg04
+
+    - debug: msg="{{ xem_vg04.stdout }}"
